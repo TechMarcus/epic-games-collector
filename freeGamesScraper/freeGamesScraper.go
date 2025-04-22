@@ -1,14 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type FreeGamesPromotions struct {
@@ -56,18 +53,25 @@ type FreeGamesPromotionsTotalPrice struct {
 	DiscountPrice int `json:"discountPrice"`
 }
 
-func CheckFreeGame() ([]string, error) {
+type GameInfo struct {
+	Name    string
+	Picture string
+}
+
+func CheckFreeGame() ([]GameInfo, error) {
 	var listurl = "https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=UA&allowCountries=UA"
 	resp, err := http.Get(listurl)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	var freeGamesPromotions FreeGamesPromotions
+
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	var freeGamesPromotions FreeGamesPromotions
 	err = json.Unmarshal([]byte(b), &freeGamesPromotions)
 	if err != nil {
 		log.Fatal(err)
@@ -77,107 +81,56 @@ func CheckFreeGame() ([]string, error) {
 		return nil, err
 	}
 
-	var elems []string
-	var startDate string
+	var freeGames []GameInfo
 	for _, element := range elements {
-		newGames, startDates := UpcommingGames(element)
-		if newGames != "" {
-			elems = append(elems, newGames)
-		}
 		if element.Price.TotalPrice.DiscountPrice == 0 {
-			elems = append(elems, element.Title)
-			fmt.Println(GetGamePicture(element))
-		}
-		if startDate == "" {
-			startDate = startDates
+			var gameInfo GameInfo
+			gameInfo.Name = element.Title
+			gameInfo.Picture = GetGamePicture(element)
+			freeGames = append(freeGames, gameInfo)
 		}
 	}
 
-	if len(elems) != 0 {
-		return elems, nil
-	}
-	return nil, fmt.Errorf("game not found")
+	return freeGames, nil
 }
 
-func UpcommingGames(element FreeGamesPromotionsElements) (string, string) {
-	if element.UpcomingPromotions.UpcomingPromotionalOffers == nil {
-		return "", ""
-	}
-	upcommingPromotions := element.UpcomingPromotions.UpcomingPromotionalOffers
-	for _, upcommingPromotion := range upcommingPromotions {
-		promotionOffers := upcommingPromotion.PromotionalOffers[0]
-		if promotionOffers.DiscountSettings.DiscountPercentage != 0 {
-			return "", ""
-		}
-		if element.Price.TotalPrice.DiscountPrice == element.Price.TotalPrice.OriginalPrice {
-
-			return element.Title, promotionOffers.StartDate
-		}
-	}
-	return "", ""
-}
-
-func GamesToTxt(games []string, filepath string) error {
-	fiWR, err := os.OpenFile(filepath, os.O_RDWR, 0644)
-	if err != nil {
-		fmt.Println("Error opening FiW", err)
-		return err
-	}
-
-	defer func() {
-		fiWR.Close()
-	}()
-
-	fileStat, err := fiWR.Stat()
-	if err != nil {
-		fmt.Println("Error getting stats", err)
-		return err
-	}
-
-	if fileStat.Size() != 0 {
-		scanner := bufio.NewScanner(fiWR)
-		line := 0
-		for scanner.Scan() {
-			if line <= len(games) || scanner.Text() != games[line] {
-				fiWR, err = os.OpenFile(filepath, os.O_RDWR|os.O_TRUNC, 0755)
-				if err != nil {
-					fmt.Println("Error opening FiW", err)
-					return err
-				}
-				fiWR.WriteString(strings.Join(games, "\n"))
-				fmt.Println(scanner.Text())
-				fmt.Println(games[line])
-				fmt.Println("New games added")
-				break
-			}
-			line++
-		}
-		return nil
-	}
-	fmt.Println("File is empty")
-	fiWR.WriteString(strings.Join(games, "\n"))
-	return nil
-}
-
-func GetGamePicture(element FreeGamesPromotionsElements) error {
+func GetGamePicture(element FreeGamesPromotionsElements) string {
 	gamePicture := element.KeyImages[0].Url
 	url := gamePicture
+	return url
+}
 
-	response, e := http.Get(url)
-	if e != nil {
-		log.Fatal(e)
+func GameInfoToJson(games []GameInfo, jsonfile string) error {
+	result, error := json.Marshal(games)
+	if error != nil {
+		return error
 	}
-	defer response.Body.Close()
-
-	file, err := os.Create("../games_info/gamesPictures/" + element.Title + ".jpg")
+	file, err := os.OpenFile(jsonfile, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer file.Close()
-
-	_, err = io.Copy(file, response.Body)
+	_, err = file.Write(result)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
 	return nil
 }
+
+// func UpcommingGames(element FreeGamesPromotionsElements) (string, string) {
+// 	if element.UpcomingPromotions.UpcomingPromotionalOffers == nil {
+// 		return "", ""
+// 	}
+// 	upcommingPromotions := element.UpcomingPromotions.UpcomingPromotionalOffers
+// 	for _, upcommingPromotion := range upcommingPromotions {
+// 		promotionOffers := upcommingPromotion.PromotionalOffers[0]
+// 		if promotionOffers.DiscountSettings.DiscountPercentage != 0 {
+// 			return "", ""
+// 		}
+// 		if element.Price.TotalPrice.DiscountPrice == element.Price.TotalPrice.OriginalPrice {
+
+//				return element.Title, promotionOffers.StartDate
+//			}
+//		}
+//		return "", ""
+//	}
