@@ -1,9 +1,11 @@
-import json
+import json, datetime
 from bot import discord_bot
 
 
 def main():
-    data = json.loads(open('../games_info/games_info.json').read())
+    if datetime.datetime.today().weekday() != 3:
+        return
+    data = json.loads(open('../games_info.json').read())
     discord_bot(data)
 
 

@@ -1,7 +1,4 @@
-from calendar import c
-from encodings.punycode import T
 from seleniumbase import SB
-import time
 
 class EgsAccount:
     def __init__(self, user):
@@ -77,10 +74,8 @@ def collector(sb):
                     return
 
                 sb.sleep(10)
-                sb.cdp.refresh()
-                sb.cdp.go_back()
-                sb.cdp.go_back()
-                sb.cdp.go_back()
+                for _ in range(4):
+                    sb.cdp.refresh()
 
                      
 

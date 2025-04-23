@@ -1,9 +1,9 @@
 from games_collector import EgsAccount, multi_collector
-import asyncio
-import os, json
-
+import json, datetime
 
 def main():
+    if datetime.datetime.today().weekday() != 3:
+        return
     # test_user = EgsAccount(user=os.getlogin())
     # test_user.single_collector()
     with open("accounts.json", "r") as f:
