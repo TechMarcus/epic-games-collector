@@ -1,5 +1,5 @@
 from games_collector import EgsAccount, multi_collector
-import json, datetime
+import json, datetime, os
 
 def main():
     if datetime.datetime.today().weekday() != 3:
