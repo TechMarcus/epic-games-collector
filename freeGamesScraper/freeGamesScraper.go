@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -109,6 +111,21 @@ func GameInfoToJson(games []GameInfo, jsonfile string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		firstLine := scanner.Text()
+		if string(result) == firstLine {
+			fmt.Println("No new games")
+			// fmt.Println(string(result) + "ADOLF" + firstLine)
+			return nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
 	_, err = file.Write(result)
 	if err != nil {
 		return err
