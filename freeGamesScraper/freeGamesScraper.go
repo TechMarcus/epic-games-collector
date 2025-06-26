@@ -107,7 +107,7 @@ func GameInfoToJson(games []GameInfo, jsonfile string) error {
 	if error != nil {
 		return error
 	}
-	file, err := os.OpenFile(jsonfile, os.O_RDWR|os.O_CREATE, 0755)
+	file, err := os.OpenFile(jsonfile, os.O_RDWR|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,6 @@ func GameInfoToJson(games []GameInfo, jsonfile string) error {
 		firstLine := scanner.Text()
 		if string(result) == firstLine {
 			fmt.Println("No new games")
-			// fmt.Println(string(result) + "ADOLF" + firstLine)
 			return nil
 		}
 	}
@@ -133,21 +132,3 @@ func GameInfoToJson(games []GameInfo, jsonfile string) error {
 
 	return nil
 }
-
-// func UpcommingGames(element FreeGamesPromotionsElements) (string, string) {
-// 	if element.UpcomingPromotions.UpcomingPromotionalOffers == nil {
-// 		return "", ""
-// 	}
-// 	upcommingPromotions := element.UpcomingPromotions.UpcomingPromotionalOffers
-// 	for _, upcommingPromotion := range upcommingPromotions {
-// 		promotionOffers := upcommingPromotion.PromotionalOffers[0]
-// 		if promotionOffers.DiscountSettings.DiscountPercentage != 0 {
-// 			return "", ""
-// 		}
-// 		if element.Price.TotalPrice.DiscountPrice == element.Price.TotalPrice.OriginalPrice {
-
-//				return element.Title, promotionOffers.StartDate
-//			}
-//		}
-//		return "", ""
-//	}

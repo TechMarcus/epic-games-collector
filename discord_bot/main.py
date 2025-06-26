@@ -1,13 +1,10 @@
-import json, datetime
-from bot import discord_bot
+import os, discord, time
+from bot import Mybot
 
-
-def main():
-    if datetime.datetime.today().weekday() != 3:
-        return
-    data = json.loads(open('../games_info.json').read())
-    discord_bot(data)
-
+def main(): 
+    intents = discord.Intents.default()
+    bot = Mybot(intents)
+    bot.discord_bot(os.environ.get('DISCORD_TOKEN'))
 
 
 if __name__ == '__main__':

@@ -1,24 +1,47 @@
-import discord,os
-import os
+import discord, asyncio
+from bot_tasks import daily_check_handler, send_avalible_games
 
 
-def discord_bot(games_data):
-    intents = discord.Intents.default()
-    intents.message_content = True
+class Mybot:
+    def __init__(self, intents):
+        self.intents = intents
+        self.intents.message_content = True
+        self.client = discord.Client(intents=self.intents)
+        
 
-    client = discord.Client(intents=intents)
 
-    @client.event
-    async def on_ready():
-        print(f'We have logged in as {client.user}')
+    def discord_bot(self, TOKEN):
+        client = self.client
 
-    @client.event
-    async def on_message(message):
-        if message.author == client.user:
-            return
+        @client.event
+        async def on_ready():
+            print(f'We have logged in as {client.user}')
 
-        if message.content.startswith('$zig'):
-            for game in games_data:
-                await message.channel.send(game['Name'] + ' ' + game['Picture'])
+            for channel in client.guilds[0].channels:
+                if channel.name == "жидівське-лігво":
+                    games_channel = client.get_channel(channel.id) 
 
-    client.run(os.environ.get('DISCORD_TOKEN'))
+            daily_check_handler(client=client, channel=games_channel)
+            print('on_ready functions loaded')
+
+        @client.event
+        async def on_message(message):
+            if message.author == client.user:
+                return
+            
+            
+            if message.author.name == 'maksred_ay':
+                await message.reply("ХВОЙДІ СЛОВА НЕ ДАВАЛИ")
+
+            if message.content.startswith('$games'):
+                lambda: asyncio.create_task(send_avalible_games(message=message))
+
+        client.run(TOKEN)
+        
+    
+
+
+
+
+
+
